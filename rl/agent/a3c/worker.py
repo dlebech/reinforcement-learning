@@ -81,7 +81,7 @@ class A3CWorker(threading.Thread):
 
         # Update local gradients
         grads = gt.gradient(total_loss, self.model.trainable_weights)
-        grads , _ = tf.clip_by_global_norm(grads, 0.5)
+        grads, _ = tf.clip_by_global_norm(grads, 0.5)
 
         # Push to global model
         # The global optimizer _should_ be thread safe
@@ -155,7 +155,7 @@ class A3CWorker(threading.Thread):
         # calculated gradient, "pretending" that it's constant
         policy_loss *= tf.stop_gradient(advantage)
 
-        #total_loss = tf.reduce_mean(value_loss + policy_loss)
+        # total_loss = tf.reduce_mean(value_loss + policy_loss)
         total_loss = tf.reduce_mean(policy_loss - 0.01 * entropy + value_loss)
 
         return total_loss

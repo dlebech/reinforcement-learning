@@ -10,7 +10,7 @@ class A3CModel(tf.keras.Model):
         # discrete actions, we will take the softmax of the output
         # probabilities and for the continuous we will use the linear output,
         # rescaled to the action space.
-        # 
+        #
         # This will be handled by the actors themselves though, not the model,
         # so here we just determine how many output nodes to use.
         self.action_is_continuous = False
@@ -31,8 +31,10 @@ class A3CModel(tf.keras.Model):
             # of a normal distribution. To make things simple, I'll emulate
             # standard deviation sigma instead of sigma^2. This should be
             # interesting...
-            self.policy_output1 = tf.keras.layers.Dense(action_size, activation='tanh')
-            self.policy_output2 = tf.keras.layers.Dense(action_size, activation='softplus')
+            self.policy_output1 = tf.keras.layers.Dense(action_size, activation="tanh")
+            self.policy_output2 = tf.keras.layers.Dense(
+                action_size, activation="softplus"
+            )
         else:
             self.policy_output1 = tf.keras.layers.Dense(action_size)
 

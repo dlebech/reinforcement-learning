@@ -2,6 +2,7 @@ import argparse
 import logging
 
 import tensorflow as tf
+
 tf.enable_eager_execution()
 
 from rl import constants, play
@@ -15,13 +16,15 @@ def run():
         description="Run a RL agent on an AI gym environment"
     )
     parser.add_argument(
-        "--env-name", default=constants.DEFAULT_ENV_NAME, help="The gym environment to run"
+        "--env-name",
+        default=constants.DEFAULT_ENV_NAME,
+        help="The gym environment to run",
     )
     parser.add_argument(
         "--algorithm",
         default=constants.DEFAULT_ALGORITHM,
         type=str,
-        choices=['random', 'dqn', 'a3c'],
+        choices=["random", "dqn", "a3c"],
         help="The algorihtm to use for the RL agent.",
     )
     parser.add_argument(
@@ -50,7 +53,7 @@ def run():
     parser.add_argument(
         "--save-dir", help="Directory in which you desire to save the model."
     )
-    parser.add_argument('--log-level', default='DEBUG')
+    parser.add_argument("--log-level", default="DEBUG")
 
     args = parser.parse_args()
 
@@ -60,14 +63,12 @@ def run():
         agent = RandomAgent(args.env_name, args.max_episodes)
     elif args.algorithm == "dqn":
         agent = DQNAgent(
-            args.env_name,
-            max_episodes=args.max_episodes,
-            save_dir=args.save_dir
+            args.env_name, max_episodes=args.max_episodes, save_dir=args.save_dir
         )
     elif args.algorithm == "a3c":
         agent = A3CAgent(
             env_name=args.env_name,
-            #learning_rate=args.lr,
+            # learning_rate=args.lr,
             max_episodes=args.max_episodes,
             save_dir=args.save_dir,
         )
@@ -76,6 +77,7 @@ def run():
         agent.train()
     else:
         play.play(agent, args.env_name, args.max_episodes)
+
 
 if __name__ == "__main__":
     run()

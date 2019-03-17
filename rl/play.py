@@ -40,7 +40,7 @@ def play(agent, env_name, num_episodes=5, max_steps=50000, render=True):
             rewards[episode] += reward
             total_steps += 1
 
-        print(f'Episode complete with reward {rewards[episode]}')
+        print(f"Episode complete with reward {rewards[episode]}")
         episode += 1
 
     print()

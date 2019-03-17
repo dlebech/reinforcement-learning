@@ -4,8 +4,10 @@ import tensorflow as tf
 import tensorflow_probability as tfp
 
 
-def rescale_mean(model, mean, old_min=-1., old_max=1.):
-    return (model.action_high - model.action_low) * (mean - old_min) / (old_max - old_min) + model.action_low
+def rescale_mean(model, mean, old_min=-1.0, old_max=1.0):
+    return (model.action_high - model.action_low) * (mean - old_min) / (
+        old_max - old_min
+    ) + model.action_low
 
 
 def continuous_action(model, logits):
@@ -17,8 +19,10 @@ def continuous_action(model, logits):
     normal_dist = tfp.distributions.Normal(mean[0], stddev[0])
     return tf.clip_by_value(normal_dist.sample(1), model.action_low, model.action_high)
 
+
 def discrete_action(model, logits):
     return tf.nn.softmax(logits)
+
 
 def act(model, state, deterministic=False):
     # When performing an action, we're not interested in the value part of the output

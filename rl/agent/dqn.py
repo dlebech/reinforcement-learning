@@ -115,7 +115,7 @@ class DQNAgent(base.Agent):
                     break
 
             if score >= best_score:
-                print('Saving new best model!')
+                print("Saving new best model!")
                 self.save_model(self.model)
                 best_score = score
 

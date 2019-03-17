@@ -21,7 +21,7 @@ def test_model_call_discrete(cartpole_env):
 def test_model_call_continuous(pendulum_env):
     a3c_model = model.A3CModel(pendulum_env)
 
-    # Pendulum has 
+    # Pendulum has
     state = pendulum_env.reset()
     state_tensor = tf.convert_to_tensor([state], dtype=tf.float32)
 
