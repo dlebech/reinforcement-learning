@@ -35,6 +35,7 @@ class A3CAgent(base.Agent):
         save_dir=None,
         max_episodes=constants.DEFAULT_MAX_EPISODES,
         gamma_discount=constants.DEFAULT_GAMMA,
+        learning_rate=constants.DEFAULT_LEARNING_RATE,
         thread_count=None,
         worker_update_frequency=constants.DEFAULT_UPDATE_FREQUENCY,
     ):
@@ -46,7 +47,9 @@ class A3CAgent(base.Agent):
         self.thread_count = thread_count or multiprocessing.cpu_count()
 
         # Global optimizer and model
-        self.optimizer = tf.train.AdamOptimizer(use_locking=True)
+        self.optimizer = tf.train.AdamOptimizer(
+            use_locking=True, learning_rate=learning_rate
+        )
         self.model = model.A3CModel(self.env)
 
         # Calling the model once will essentially tell it what to expect as

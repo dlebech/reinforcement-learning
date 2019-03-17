@@ -1,10 +1,13 @@
 """Base agent which sets up the target output directory and environment.
 
 """
+import logging
 import os
 import tempfile
 
 import gym
+
+logger = logging.getLogger(__name__)
 
 
 class Agent:
@@ -27,11 +30,11 @@ class Agent:
         )
 
     def save_model(self, model):
-        print(f"Saving model to: {self.model_path}")
+        logger.info(f"Saving model to: {self.model_path}")
         model.save_weights(self.model_path)
 
     def load_model(self, model):
-        print(f"Loading model from: {self.model_path}")
+        logger.info(f"Loading model from: {self.model_path}")
         model.load_weights(self.model_path)
         return model
 

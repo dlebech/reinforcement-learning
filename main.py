@@ -68,7 +68,7 @@ def run():
     elif args.algorithm == "a3c":
         agent = A3CAgent(
             env_name=args.env_name,
-            # learning_rate=args.lr,
+            learning_rate=args.lr,
             max_episodes=args.max_episodes,
             save_dir=args.save_dir,
         )
@@ -76,6 +76,8 @@ def run():
     if args.train:
         agent.train()
     else:
+        if hasattr(agent, "model"):
+            agent.model = agent.load_model(agent.model)
         play.play(agent, args.env_name, args.max_episodes)
 
 
