@@ -10,8 +10,8 @@ import tensorflow as tf
 import tensorflow_probability as tfp
 
 from rl import constants
-from rl.agent import util
-from rl.agent.a3c import model, actor
+from rl.agent import util, actor
+from rl.agent.a3c import model
 
 
 logger = logging.getLogger(__name__)
@@ -206,7 +206,7 @@ class A3CWorker(threading.Thread):
         )
 
     def _run(self):
-        memory = WorkerMemory()
+        memory = util.WorkerMemory()
 
         while self.tracker.global_episodes < self.max_episodes:
             # Time step is used to keep track of when to update the global model
@@ -272,20 +272,3 @@ class A3CWorker(threading.Thread):
             self._run()
         except Exception as e:
             self.exception = e
-
-
-class WorkerMemory:
-    def __init__(self):
-        self.states = []
-        self.actions = []
-        self.rewards = []
-
-    def append(self, state, action, reward):
-        self.states.append(state)
-        self.actions.append(action)
-        self.rewards.append(reward)
-
-    def clear(self):
-        self.states = []
-        self.actions = []
-        self.rewards = []

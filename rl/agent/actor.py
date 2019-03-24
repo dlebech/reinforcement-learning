@@ -29,7 +29,7 @@ def act(model, state, deterministic=False):
     # It is assumed that the model outputs a discrete action space for now.
     logits, _ = model(tf.convert_to_tensor([state], dtype=tf.float32))
 
-    if model.action_is_continuous:
+    if hasattr(model, "action_is_continuous") and model.action_is_continuous:
         # Note: Assumes a single action currently.
         action = continuous_action(model, logits)
         return action.numpy()[0]

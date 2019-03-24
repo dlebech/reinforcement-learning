@@ -18,8 +18,8 @@ import numpy as np
 import tensorflow as tf
 
 from rl import constants
-from rl.agent import base, util
-from rl.agent.a3c import model, actor
+from rl.agent import base, util, actor
+from rl.agent.a3c import model
 from rl.agent.a3c.worker import A3CWorker
 
 

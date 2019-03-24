@@ -1,4 +1,5 @@
-from rl.agent.a3c import model, actor
+from rl.agent import actor
+from rl.agent.a3c import model
 
 
 def test_rescale_mean(pendulum_env):

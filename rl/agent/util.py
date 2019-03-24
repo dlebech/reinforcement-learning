@@ -2,54 +2,10 @@ import collections
 import logging
 import threading
 
+import gym
 import numpy as np
 
 logger = logging.getLogger(__name__)
-
-
-def record(
-    episode,
-    episode_reward,
-    worker_idx,
-    global_ep_reward,
-    result_queue,
-    total_loss,
-    num_steps,
-):
-    """Helper function to store score and print statistics.
-
-    Parameters
-    ----------
-    episode
-        Current episode
-    episode_reward
-        Reward accumulated over the current episode
-    worker_idx
-        Which thread (worker)
-    global_ep_reward
-        The moving average of the global reward
-    result_queue
-        Queue storing the moving average of the scores
-    total_loss
-        The total loss accumualted over the current episode
-    num_steps
-        The number of steps the episode took to complete
-
-    """
-    if global_ep_reward == 0:
-        global_ep_reward = episode_reward
-    else:
-        global_ep_reward = global_ep_reward * 0.99 + episode_reward * 0.01
-    logger.debug(
-        f"Episode: {episode} | "
-        f"Moving Average Reward: {int(global_ep_reward)} | "
-        f"Episode Reward: {int(episode_reward)} | "
-        f"Loss: {int(total_loss / float(num_steps) * 1000) / 1000} | "
-        f"Steps: {num_steps} | "
-        f"Worker: {worker_idx}"
-    )
-    result_queue.put(global_ep_reward)
-    return global_ep_reward
 
 
 class WorkerTracker:
@@ -83,7 +39,7 @@ class WorkerTracker:
             f"Moving average: {np.round(np.mean(self.losses[-self.window:]), 1)}"
         )
 
-        if reward > self.global_best_reward:
+        if self.global_model is not None and reward > self.global_best_reward:
             logger.info(
                 f"New best reward: {reward} vs. {self.global_best_reward}, "
                 f"Saving model to: {self.model_path}"
@@ -91,3 +47,43 @@ class WorkerTracker:
             with self.lock:
                 self.global_model.save_weights(self.model_path)
                 self.global_best_reward = reward
+
+
+class WorkerMemory:
+    def __init__(self):
+        self.states = []
+        self.actions = []
+        self.rewards = []
+
+    def append(self, state, action, reward):
+        self.states.append(state)
+        self.actions.append(action)
+        self.rewards.append(reward)
+
+    def clear(self):
+        self.states = []
+        self.actions = []
+        self.rewards = []
+
+
+def parse_env(env):
+    """Parse the given environment and return useful information about it,
+    such as whether it is continuous or not and the size of the action space.
+
+    """
+    # Determine whether input is continuous or discrete. Generally, for
+    # discrete actions, we will take the softmax of the output
+    # probabilities and for the continuous we will use the linear output,
+    # rescaled to the action space.
+    action_is_continuous = False
+    action_low = None
+    action_high = None
+    if isinstance(env.action_space, gym.spaces.Discrete):
+        action_size = env.action_space.n
+    else:
+        action_is_continuous = True
+        action_low = env.action_space.low
+        action_high = env.action_space.high
+        action_size = env.action_space.low.shape[0]
+
+    return action_is_continuous, action_size, action_low, action_high

@@ -10,6 +10,7 @@ from rl import constants, play
 from rl.agent.rnd import RandomAgent
 from rl.agent.a3c import A3CAgent
 from rl.agent.dqn import DQNAgent
+from rl.agent.ppo import PPOAgent
 
 
 def run():
@@ -25,7 +26,7 @@ def run():
         "--algorithm",
         default=constants.DEFAULT_ALGORITHM,
         type=str,
-        choices=["random", "dqn", "a3c"],
+        choices=["random", "dqn", "a3c", "ppo"],
         help="The algorihtm to use for the RL agent.",
     )
     parser.add_argument(
@@ -73,6 +74,12 @@ def run():
             learning_rate=args.lr,
             max_episodes=args.max_episodes,
             save_dir=args.save_dir,
+        )
+    elif args.algorithm == "ppo":
+        agent = PPOAgent(
+            env_name=args.env_name,
+            save_dir=args.save_dir,
+            max_episodes=args.max_episodes,
         )
 
     if args.train:

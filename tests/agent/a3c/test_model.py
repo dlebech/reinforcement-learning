@@ -10,8 +10,8 @@ def test_model_variable_scope(cartpole_env):
     state_tensor = tf.convert_to_tensor([state], dtype=tf.float32)
     a3c_model(state_tensor)
 
-    value_weights = [v for v in a3c_model.trainable_weights if 'value_scope' in v.name]
-    actor_weights = [v for v in a3c_model.trainable_weights if 'actor_scope' in v.name]
+    value_weights = [v for v in a3c_model.trainable_weights if "value_scope" in v.name]
+    actor_weights = [v for v in a3c_model.trainable_weights if "actor_scope" in v.name]
 
     # Two sets of weight layers, each with a bias.
     assert len(value_weights) == 4

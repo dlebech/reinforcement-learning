@@ -5,16 +5,20 @@
 
 Yet another repo with reinforcement learning algorithms :-)
 
+If you want well-implemented algorithms, you're probably better off using the implementatinos in [`keras-rl`](https://github.com/keras-rl/keras-rl), OpenAI's [`baselines`](https://github.com/openai/baselines) or [`stable-baselines`](https://github.com/hill-a/stable-baselines).
+
 I used this code for learning some of the concepts of reinceforcement learning as well as getting more familiar with Tensorflow/Keras such as "manually" updating network weights, calculating gradients and eager execution. As such, the code is not optimized and might not actually work as expected.
 
 Agents:
 - Asynchronous Advantage Actor Critic (`a3c`)
-- Deep Q learning (`dqn`).
+- Proximal Policy Optimization (`ppo`)
+- Deep Q learning (`dqn`)
 - Random (`random`)
+
+`dqn` and `ppo` only support discrete action environments currently.
 
 All agents are built around solving an [OpenAI Gym](https://gym.openai.com/) environment. Currently, the only reliably solvable environment is the `CartPole-v0` (and `v1`). I have not had much luck with the continuous action environments such as `Pendulum-v0` or `MountainCar-v0`.
 
-If you want better implemented algorithms, you're probably better off using [`keras-rl`](https://github.com/keras-rl/keras-rl) or OpenAI's [`baselines`](https://github.com/openai/baselines) implementations.
 
 ## Train and play
 

@@ -29,8 +29,9 @@ class RandomAgent(base.Agent):
         return self.env.action_space.sample()
 
     def train(self, render=False):
+        tracker = util.WorkerTracker(None, None)
         reward_avg = 0
-        for episode in range(self.max_episodes):
+        for _ in range(self.max_episodes):
             done = False
             state = self.env.reset()
             reward_sum = 0.0
@@ -42,16 +43,9 @@ class RandomAgent(base.Agent):
                 state, reward, done, _ = self.env.step(self.act(state))
                 steps += 1
                 reward_sum += reward
+
             # Record statistics
-            self.global_moving_average_reward = util.record(
-                episode,
-                reward_sum,
-                0,
-                self.global_moving_average_reward,
-                self.res_queue,
-                0,
-                steps,
-            )
+            tracker.episode_complete(0, steps, reward_sum, 0)
 
             reward_avg += reward_sum
         final_avg = reward_avg / float(self.max_episodes)
