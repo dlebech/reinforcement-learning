@@ -63,10 +63,14 @@ class WorkerTracker:
         self.losses = []
         self.window = 50
 
-    def episode_complete(self, index, steps, reward, loss):
+    def episode_complete(
+        self, index, steps, reward, loss, policy_loss=None, value_loss=None
+    ):
         with self.lock:
             self.global_episodes += 1
             self.rewards.append(reward)
+            if policy_loss is not None and value_loss is not None:
+                loss = [loss, policy_loss, value_loss]
             self.losses.append(loss)
 
         logger.debug(

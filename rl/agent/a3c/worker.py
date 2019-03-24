@@ -76,23 +76,60 @@ class A3CWorker(threading.Thread):
 
     def update_model(self, memory, new_state, terminal):
         # Find total loss
-        with tf.GradientTape() as gt:
-            total_loss = self.calculate_loss(memory, new_state, terminal)
+        with tf.GradientTape(persistent=True) as gt:
+            total_loss, policy_loss, value_loss = self.calculate_loss(
+                memory, new_state, terminal
+            )
+
+        value_weights = [
+            v for v in self.model.trainable_weights if "value_scope" in v.name
+        ]
+        actor_weights = [
+            v for v in self.model.trainable_weights if "actor_scope" in v.name
+        ]
+
+        value_grads = gt.gradient(value_loss, value_weights)
+        value_grads, _ = tf.clip_by_global_norm(value_grads, 0.5)
+        self.global_optimizer.apply_gradients(
+            zip(
+                value_grads,
+                [
+                    v
+                    for v in self.global_model.trainable_weights
+                    if "value_scope" in v.name
+                ],
+            )
+        )
+
+        actor_grads = gt.gradient(policy_loss, actor_weights)
+        actor_grads, _ = tf.clip_by_global_norm(actor_grads, 0.5)
+        self.global_optimizer.apply_gradients(
+            zip(
+                actor_grads,
+                [
+                    v
+                    for v in self.global_model.trainable_weights
+                    if "actor_scope" in v.name
+                ],
+            )
+        )
+
+        del gt
 
         # Update local gradients
-        grads = gt.gradient(total_loss, self.model.trainable_weights)
-        grads, _ = tf.clip_by_global_norm(grads, 0.5)
+        # grads = gt.gradient(total_loss, self.model.trainable_weights)
+        # grads, _ = tf.clip_by_global_norm(grads, 0.5)
 
-        # Push to global model
-        # The global optimizer _should_ be thread safe
-        self.global_optimizer.apply_gradients(
-            zip(grads, self.global_model.trainable_weights)
-        )
+        ## Push to global model
+        ## The global optimizer _should_ be thread safe
+        # self.global_optimizer.apply_gradients(
+        #    zip(grads, self.global_model.trainable_weights)
+        # )
 
         # Fetch global model's weights
         self.model.set_weights(self.global_model.get_weights())
 
-        return total_loss.numpy()
+        return total_loss.numpy(), policy_loss.numpy(), value_loss.numpy()
 
     def calculate_loss(self, memory, new_state, terminal):
         # From algorithm:
@@ -101,7 +138,8 @@ class A3CWorker(threading.Thread):
         R = 0
         if not terminal:
             _, values = self.model(tf.convert_to_tensor([new_state], dtype=tf.float32))
-            R = values
+            R = tf.squeeze(values).numpy()
+            assert isinstance(R, np.float32)
 
         # From algorithm:
         # for each timestep t in memory (backwards)
@@ -129,14 +167,16 @@ class A3CWorker(threading.Thread):
         # R - V(s) (for grad)
         # This is called "advantage" in many tutorials and is a stepping stone
         # on the way to the policy loss.
-        advantage = tf.convert_to_tensor(list(R_list), dtype=tf.float32) - values
+        advantage = (
+            tf.convert_to_tensor(
+                np.array(list(R_list)).reshape(values.shape), dtype=tf.float32
+            )
+            - values
+        )
 
         # (R - V(s))^2 (for grad_v)
         # Called "value loss". It uses the square of the advantage from above.
         value_loss = tf.square(advantage)
-
-        # Use a constant factor to adjust the effect of the value loss
-        value_loss = 0.5 * value_loss
 
         if self.model.action_is_continuous:
             mean, stddev = logits
@@ -156,9 +196,14 @@ class A3CWorker(threading.Thread):
         policy_loss *= tf.stop_gradient(advantage)
 
         # total_loss = tf.reduce_mean(value_loss + policy_loss)
-        total_loss = tf.reduce_mean(policy_loss - 0.01 * entropy + value_loss)
+        # Use a constant factor to adjust the effect of the value loss and entropy
+        total_loss = tf.reduce_mean(policy_loss - 0.01 * entropy + 0.5 * value_loss)
 
-        return total_loss
+        return (
+            total_loss,
+            tf.reduce_mean(policy_loss - 0.01 * entropy),
+            tf.reduce_mean(value_loss),
+        )
 
     def _run(self):
         memory = WorkerMemory()
@@ -170,6 +215,8 @@ class A3CWorker(threading.Thread):
             ep_step = 0
             ep_reward = 0
             ep_loss = 0
+            ep_loss_policy = 0
+            ep_loss_value = 0
 
             state = self.env.reset()
             memory.clear()
@@ -204,7 +251,10 @@ class A3CWorker(threading.Thread):
                 # Determine if we should update the model
                 # We do this at regular intervals...
                 if time_step == self.update_frequency or done:
-                    ep_loss += self.update_model(memory, new_state, terminal)
+                    tl, pl, vl = self.update_model(memory, new_state, terminal)
+                    ep_loss += tl
+                    ep_loss_policy += pl
+                    ep_loss_value += vl
                     time_step = 0
                     memory.clear()
 
@@ -212,7 +262,9 @@ class A3CWorker(threading.Thread):
                     # Break for terminal state or if we have stepped too far :-)
                     break
 
-            self.tracker.episode_complete(self.index, ep_step, ep_reward, ep_loss)
+            self.tracker.episode_complete(
+                self.index, ep_step, ep_reward, ep_loss, ep_loss_policy, ep_loss_value
+            )
 
     def run(self):
         self.exception = None

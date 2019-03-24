@@ -22,8 +22,8 @@ class A3CModel(tf.keras.Model):
             self.action_high = env.action_space.high
             action_size = env.action_space.low.shape[0]
 
-        # Policy layer
-        self.policy_dense1 = tf.keras.layers.Dense(16, activation="relu")
+        # Policy (actor) layer
+        self.policy_dense1 = tf.keras.layers.Dense(32, activation="relu")
 
         if self.action_is_continuous:
             # According to A3C paper, they use a linear and softplus layer for
@@ -39,19 +39,22 @@ class A3CModel(tf.keras.Model):
             self.policy_output1 = tf.keras.layers.Dense(action_size)
 
         # Value layers
-        self.value_dense1 = tf.keras.layers.Dense(16, activation="relu")
+        self.value_dense1 = tf.keras.layers.Dense(32, activation="relu")
         self.value_output = tf.keras.layers.Dense(1)
 
     def call(self, inputs):
         # Forward pass on the two paths on the network
-        x = self.policy_dense1(inputs)
-        logits1 = self.policy_output1(x)
 
-        v1 = self.value_dense1(inputs)
-        values = self.value_output(v1)
+        with tf.variable_scope("value_scope"):
+            v1 = self.value_dense1(inputs)
+            values = self.value_output(v1)
 
-        if self.action_is_continuous:
-            logits2 = self.policy_output2(x)
-            return (logits1, logits2), values
+        with tf.variable_scope("actor_scope"):
+            x = self.policy_dense1(inputs)
+            logits1 = self.policy_output1(x)
+
+            if self.action_is_continuous:
+                logits2 = self.policy_output2(x)
+                return (logits1, logits2), values
 
         return logits1, values

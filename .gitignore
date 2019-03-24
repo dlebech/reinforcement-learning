@@ -106,3 +106,4 @@ venv.bak/
 # Extra folders
 output/
 .vscode/
+logs/

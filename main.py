@@ -1,5 +1,6 @@
 import argparse
 import logging
+import multiprocessing
 
 import tensorflow as tf
 
@@ -54,6 +55,7 @@ def run():
         "--save-dir", help="Directory in which you desire to save the model."
     )
     parser.add_argument("--log-level", default="DEBUG")
+    parser.add_argument("--thread-count", type=int, default=multiprocessing.cpu_count())
 
     args = parser.parse_args()
 
